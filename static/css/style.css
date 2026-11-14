@@ -36,6 +36,8 @@ a { color: #2563d9; }
   color: #222222;
 }
 .author { display: inline-block; margin: 0 10px; white-space: nowrap; }
+.author a { color: #2563d9; text-decoration: none; }
+.author a:hover { text-decoration: underline; }
 .authors sup, .affiliations sup, .author-note sup { font-size: 0.65em; }
 .affiliations {
   margin: 12px 0 0;
