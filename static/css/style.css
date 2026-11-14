@@ -101,7 +101,7 @@ figcaption {
   text-align: justify;
 }
 figure { margin: 26px 0; }
-figure.narrow img { max-width: 620px; }
+figure.narrow img { width: 100%; max-width: min(620px, 100%); }
 figure.narrow figcaption { text-align: center; }
 
 /* ---------- Tables ---------- */
