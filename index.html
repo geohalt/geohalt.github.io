@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GeoHalt: Adaptive Token Halting for Efficient Visual Geometry Transformers</title>
+  <meta name="description" content="GeoHalt is an adaptive token halting module that speeds up visual geometry transformers such as VGGT, FastVGGT and SparseVGGT while maintaining or improving multi-view 3D reconstruction quality.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="GeoHalt: Adaptive Token Halting for Efficient Visual Geometry Transformers">
+  <meta property="og:description" content="Adaptive token halting for efficient visual geometry transformers.">
+  <meta property="og:url" content="https://geohalt.github.io/">
+  <meta property="og:image" content="https://geohalt.github.io/static/images/og_image.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="static/images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+
+<header class="header">
+  <h1 class="title"><span class="name">GeoHalt</span>: Adaptive Token Halting for<br class="br-wide"> Efficient Visual Geometry Transformers</h1>
+
+  <!-- Edit the author list here. -->
+  <p class="authors">Anonymous Authors</p>
+
+  <div class="buttons">
+    <!-- Replace href="#" with the real links when they are available. -->
+    <a class="button" href="#">Paper</a>
+    <a class="button" href="#">arXiv</a>
+    <a class="button" href="#">Code</a>
+  </div>
+</header>
+
+<main>
+
+  <section class="teaser">
+    <img src="static/images/fig1_teaser.webp" width="2400" height="837"
+         alt="500-view ScanNet reconstruction from ground truth, VGGT, SparseVGGT, SparseVGGT + GeoHalt, FastVGGT and FastVGGT + GeoHalt, with point clouds on top and distance to ground truth below.">
+    <p class="caption">
+      GeoHalt accelerates visual geometry transformers without compromising multi-view reconstruction quality.
+      On this 500-view ScanNet scene, GeoHalt reduces surface deviations from ground truth and achieves 2.45&times; and
+      1.84&times; inference speedups over SparseVGGT and FastVGGT, respectively. Bottom-row colors indicate distance to ground truth.
+    </p>
+  </section>
+
+  <section>
+    <h2>Abstract</h2>
+    <p class="text">
+      Feed-forward visual geometry transformers have achieved remarkable performance in multi-view 3D reconstruction,
+      but their computational cost remains substantial as the number of input views increases. Existing acceleration
+      methods primarily optimize attention computation within individual layers, while still updating every image patch
+      throughout the entire network. This uniform processing strategy overlooks the fact that different patches may
+      require different amounts of computation to extract useful geometric information. In this work, we introduce
+      GeoHalt, an adaptive token halting module for visual geometry transformers that dynamically determines when
+      individual patches can stop updating, reducing redundant computation across network layers. GeoHalt employs
+      lightweight Hard Concrete gates and a Lagrangian controller to regulate patch-update depth toward the computation
+      budget. To preserve geometric context, halted features remain accessible to frame attention and reconstruction
+      heads, while global attention processes only active patches. This design enables GeoHalt to complement existing
+      acceleration strategies, such as token merging and sparse attention. Extensive experiments on several multi-view
+      reconstruction benchmarks demonstrate that GeoHalt can be integrated into existing visual geometry transformers,
+      such as VGGT, FastVGGT, and SparseVGGT, to improve inference efficiency while maintaining or even enhancing
+      reconstruction quality.
+    </p>
+  </section>
+
+  <section>
+    <h2>Motivation</h2>
+    <p class="text">
+      We train a linear depth probe on frozen features from each DINOv2 layer and each VGGT frame-attention layer.
+      Depth error decreases through DINOv2, plateaus in early VGGT layers, and rises again after layer 11, so deeper
+      features are not always better for depth. Different patches also reach their minimum error at different layers:
+      67.7% of patches do so by layer 11, while harder regions such as texture-poor walls keep improving up to layer 17.
+      This suggests letting each patch stop updating once it has enough geometric information.
+    </p>
+    <figure>
+      <img src="static/images/fig2_probe.webp" width="1984" height="800" loading="lazy"
+           alt="Depth-probe analysis: depth error across layers, cumulative fraction of patches reaching their minimum error, and per-patch minimum-error layer maps.">
+      <figcaption>
+        Depth-probe analysis. (a) Mean aligned depth MAE across layers. (b) Cumulative fraction of patches reaching their
+        minimum error (solid) or within 5% of it (dashed). (c) RGB views and minimum-error layer maps. D/V denote
+        zero-based DINOv2/VGGT layers.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Method</h2>
+    <figure>
+      <img src="static/images/fig3_arch.webp" width="1984" height="1004" loading="lazy"
+           alt="GeoHalt architecture: routers after DINO and VGGT blocks 4, 11 and 17 halt patch updates; frame attention uses active queries with active and frozen keys and values; global attention and FFNs update only active tokens.">
+      <figcaption>
+        GeoHalt architecture. (a) Routers after DINO and blocks 4, 11, and 17 progressively halt patch updates. Dense heads
+        read active and frozen features at their original image locations; camera and register tokens remain active.
+        (b) A router separates continuing patches from newly halted ones. Frame attention uses active queries with active
+        and frozen keys/values, whereas global attention and FFNs update only active tokens.
+      </figcaption>
+    </figure>
+    <p class="text">
+      GeoHalt inserts lightweight learnable routers after the DINOv2 encoder and VGGT blocks 4, 11, and 17. Each router
+      predicts, from intermediate token features, whether an active patch should continue to be updated, using
+      Hard Concrete gates that are trained end to end. Once a patch halts, it skips further attention and FFN updates,
+      but its cached feature is still used as a key and value in subsequent frame attention and is read by the
+      reconstruction heads. Global attention processes only active patches, so GeoHalt can be combined with token merging
+      (FastVGGT) or block-sparse attention (SparseVGGT). A Lagrangian controller regulates the overall fraction of
+      patch-block updates toward a target budget (60% by default), letting the geometry objective decide which patches
+      halt and when.
+    </p>
+  </section>
+
+  <section>
+    <h2>Results</h2>
+    <p class="text">
+      GeoHalt reduces point-cloud AbsRel in all 18 comparisons with FastVGGT and SparseVGGT, with reductions of up to
+      44.91%, and improves pose AUC@30 in 17 of 18 comparisons. At 500 views, it achieves up to 2.16&times; and
+      2.04&times; inference speedups over SparseVGGT and FastVGGT, respectively.
+    </p>
+
+    <p class="table-title">Point-cloud reconstruction (points reconstructed from predicted depth and pose)</p>
+    <div class="table-wrap">
+      <table class="paper-table t1">
+      <thead><tr><th rowspan="2" class="l">Method</th><th colspan="3">100 views</th><th colspan="3">300 views</th><th colspan="3">500 views</th></tr>
+      <tr><th>AbsRel&nbsp;&darr;</th><th>Inlier@1.25&nbsp;&uarr;</th><th>Time&nbsp;(s)&nbsp;&darr;</th><th>AbsRel&nbsp;&darr;</th><th>Inlier@1.25&nbsp;&uarr;</th><th>Time&nbsp;(s)&nbsp;&darr;</th><th>AbsRel&nbsp;&darr;</th><th>Inlier@1.25&nbsp;&uarr;</th><th>Time&nbsp;(s)&nbsp;&darr;</th></tr></thead><tbody>
+      <tr class="ds"><td colspan="10" class="l">7-Scenes</td></tr>
+      <tr><td class="l">VGGT</td><td>0.075</td><td><b>97.9</b></td><td>3.9</td><td>0.073</td><td><b>97.9</b></td><td>27.2</td><td><b>0.075</b></td><td><b>97.8</b></td><td>71.5</td></tr>
+      <tr class="ours"><td class="l">VGGT + GeoHalt</td><td><b>0.073</b></td><td><b>97.9</b></td><td><b>2.4</b> <span class="sp">(1.6&times;)</span></td><td><b>0.072</b></td><td><b>97.9</b></td><td><b>13.1</b> <span class="sp">(2.1&times;)</span></td><td><b>0.075</b></td><td><b>97.8</b></td><td><b>32.4</b> <span class="sp">(2.2&times;)</span></td></tr>
+      <tr><td class="l">SparseVGGT</td><td>0.078</td><td><b>97.8</b></td><td>3.3</td><td>0.077</td><td>97.8</td><td>20.7</td><td>0.079</td><td><b>97.9</b></td><td>52.8</td></tr>
+      <tr class="ours"><td class="l">SparseVGGT + GeoHalt</td><td><b>0.075</b></td><td><b>97.8</b></td><td><b>2.2</b> <span class="sp">(1.5&times;)</span></td><td><b>0.075</b></td><td><b>97.9</b></td><td><b>10.3</b> <span class="sp">(2.0&times;)</span></td><td><b>0.077</b></td><td><b>97.9</b></td><td><b>24.4</b> <span class="sp">(2.2&times;)</span></td></tr>
+      <tr><td class="l">FastVGGT</td><td>0.079</td><td><b>97.9</b></td><td>2.3</td><td>0.078</td><td><b>97.9</b></td><td>11.3</td><td>0.079</td><td><b>97.9</b></td><td>26.1</td></tr>
+      <tr class="ours"><td class="l">FastVGGT + GeoHalt</td><td><b>0.073</b></td><td><b>97.9</b></td><td><b>1.9</b> <span class="sp">(1.2&times;)</span></td><td><b>0.073</b></td><td><b>97.9</b></td><td><b>8.5</b> <span class="sp">(1.3&times;)</span></td><td><b>0.075</b></td><td><b>97.9</b></td><td><b>18.3</b> <span class="sp">(1.4&times;)</span></td></tr>
+      <tr class="ds"><td colspan="10" class="l">ScanNet++</td></tr>
+      <tr><td class="l">VGGT</td><td><b>0.034</b></td><td><b>98.9</b></td><td>3.1</td><td>0.038</td><td><b>98.9</b></td><td>20.6</td><td>0.044</td><td><b>98.9</b></td><td>53.8</td></tr>
+      <tr class="ours"><td class="l">VGGT + GeoHalt</td><td>0.035</td><td><b>98.9</b></td><td><b>2.0</b> <span class="sp">(1.6&times;)</span></td><td><b>0.037</b></td><td><b>98.9</b></td><td><b>10.5</b> <span class="sp">(2.0&times;)</span></td><td><b>0.042</b></td><td><b>98.9</b></td><td><b>25.5</b> <span class="sp">(2.1&times;)</span></td></tr>
+      <tr><td class="l">SparseVGGT</td><td>0.051</td><td><b>98.9</b></td><td>2.6</td><td>0.053</td><td><b>98.9</b></td><td>15.4</td><td>0.057</td><td>98.8</td><td>38.8</td></tr>
+      <tr class="ours"><td class="l">SparseVGGT + GeoHalt</td><td><b>0.043</b></td><td><b>98.9</b></td><td><b>1.9</b> <span class="sp">(1.4&times;)</span></td><td><b>0.044</b></td><td><b>98.9</b></td><td><b>8.3</b> <span class="sp">(1.9&times;)</span></td><td><b>0.047</b></td><td><b>98.9</b></td><td><b>19.0</b> <span class="sp">(2.0&times;)</span></td></tr>
+      <tr><td class="l">FastVGGT</td><td>0.072</td><td>98.7</td><td>2.0</td><td>0.076</td><td>98.6</td><td>8.9</td><td>0.079</td><td>98.6</td><td>20.3</td></tr>
+      <tr class="ours"><td class="l">FastVGGT + GeoHalt</td><td><b>0.042</b></td><td><b>98.9</b></td><td><b>1.7</b> <span class="sp">(1.2&times;)</span></td><td><b>0.042</b></td><td><b>98.9</b></td><td><b>6.7</b> <span class="sp">(1.3&times;)</span></td><td><b>0.043</b></td><td><b>98.9</b></td><td><b>15.3</b> <span class="sp">(1.3&times;)</span></td></tr>
+      <tr class="ds"><td colspan="10" class="l">TartanAir</td></tr>
+      <tr><td class="l">VGGT</td><td>0.43</td><td>78.2</td><td>6.3</td><td>0.63</td><td>68.5</td><td>45.5</td><td>0.71</td><td>65.1</td><td>122.0</td></tr>
+      <tr class="ours"><td class="l">VGGT + GeoHalt</td><td><b>0.37</b></td><td><b>80.0</b></td><td><b>3.8</b> <span class="sp">(1.7&times;)</span></td><td><b>0.59</b></td><td><b>70.9</b></td><td><b>24.2</b> <span class="sp">(1.9&times;)</span></td><td><b>0.63</b></td><td><b>68.3</b></td><td><b>61.8</b> <span class="sp">(2.0&times;)</span></td></tr>
+      <tr><td class="l">SparseVGGT</td><td>0.46</td><td>74.9</td><td>4.7</td><td>0.61</td><td>66.8</td><td>31.4</td><td>0.64</td><td>66.1</td><td>81.7</td></tr>
+      <tr class="ours"><td class="l">SparseVGGT + GeoHalt</td><td><b>0.44</b></td><td><b>77.4</b></td><td><b>3.2</b> <span class="sp">(1.5&times;)</span></td><td><b>0.56</b></td><td><b>68.8</b></td><td><b>17.0</b> <span class="sp">(1.8&times;)</span></td><td><b>0.60</b></td><td><b>69.1</b></td><td><b>41.4</b> <span class="sp">(2.0&times;)</span></td></tr>
+      <tr><td class="l">FastVGGT</td><td>0.50</td><td>75.6</td><td>4.5</td><td>0.63</td><td>67.8</td><td>27.2</td><td>0.68</td><td>66.7</td><td>68.6</td></tr>
+      <tr class="ours"><td class="l">FastVGGT + GeoHalt</td><td><b>0.43</b></td><td><b>76.6</b></td><td><b>2.8</b> <span class="sp">(1.6&times;)</span></td><td><b>0.57</b></td><td><b>69.1</b></td><td><b>13.9</b> <span class="sp">(2.0&times;)</span></td><td><b>0.57</b></td><td><b>69.2</b></td><td><b>33.6</b> <span class="sp">(2.0&times;)</span></td></tr>
+      </tbody></table>
+    </div>
+
+    <p class="table-title">Camera-pose (AUC@30) and depth (AbsRel) prediction</p>
+    <div class="table-wrap">
+      <table class="paper-table t2">
+      <thead><tr><th rowspan="2" class="l">Dataset</th><th rowspan="2">Views</th><th colspan="2">VGGT</th><th colspan="2" class="ours-h">VGGT + GeoHalt</th><th colspan="2">SparseVGGT</th><th colspan="2" class="ours-h">SparseVGGT + GeoHalt</th><th colspan="2">FastVGGT</th><th colspan="2" class="ours-h">FastVGGT + GeoHalt</th></tr>
+      <tr><th>AUC&nbsp;&uarr;</th><th>AbsRel&nbsp;&darr;</th><th>AUC&nbsp;&uarr;</th><th>AbsRel&nbsp;&darr;</th><th>AUC&nbsp;&uarr;</th><th>AbsRel&nbsp;&darr;</th><th>AUC&nbsp;&uarr;</th><th>AbsRel&nbsp;&darr;</th><th>AUC&nbsp;&uarr;</th><th>AbsRel&nbsp;&darr;</th><th>AUC&nbsp;&uarr;</th><th>AbsRel&nbsp;&darr;</th></tr></thead><tbody>
+      <tr class="grp-start"><td class="l" rowspan="3">7-Scenes</td><td>100</td><td><b>83.1</b></td><td><b>0.26</b></td><td>82.7</td><td><b>0.26</b></td><td>80.5</td><td><b>0.25</b></td><td><b>81.6</b></td><td><b>0.25</b></td><td><b>82.1</b></td><td>0.28</td><td><b>82.1</b></td><td><b>0.26</b></td></tr>
+      <tr><td>300</td><td><b>82.0</b></td><td>0.27</td><td>81.7</td><td><b>0.26</b></td><td>79.9</td><td><b>0.26</b></td><td><b>80.9</b></td><td><b>0.26</b></td><td>81.6</td><td>0.29</td><td><b>81.7</b></td><td><b>0.27</b></td></tr>
+      <tr><td>500</td><td><b>80.9</b></td><td>0.27</td><td>80.7</td><td><b>0.26</b></td><td>79.3</td><td><b>0.26</b></td><td><b>80.2</b></td><td><b>0.26</b></td><td><b>81.3</b></td><td>0.29</td><td><b>81.3</b></td><td><b>0.27</b></td></tr>
+      <tr class="grp-start"><td class="l" rowspan="3">ScanNet++</td><td>100</td><td><b>93.9</b></td><td><b>0.035</b></td><td>93.5</td><td>0.036</td><td>90.8</td><td><b>0.038</b></td><td><b>92.2</b></td><td>0.039</td><td>89.3</td><td>0.043</td><td><b>91.9</b></td><td><b>0.041</b></td></tr>
+      <tr><td>300</td><td><b>92.8</b></td><td><b>0.036</b></td><td>92.7</td><td><b>0.036</b></td><td>90.2</td><td><b>0.038</b></td><td><b>91.7</b></td><td>0.040</td><td>89.2</td><td>0.044</td><td><b>92.1</b></td><td><b>0.042</b></td></tr>
+      <tr><td>500</td><td><b>91.3</b></td><td><b>0.038</b></td><td><b>91.3</b></td><td>0.039</td><td>89.2</td><td><b>0.040</b></td><td><b>90.7</b></td><td>0.041</td><td>88.9</td><td>0.046</td><td><b>91.8</b></td><td><b>0.043</b></td></tr>
+      <tr class="grp-start"><td class="l" rowspan="3">TartanAir</td><td>100</td><td>51.0</td><td>0.15</td><td><b>52.4</b></td><td><b>0.14</b></td><td>46.9</td><td><b>0.16</b></td><td><b>48.4</b></td><td><b>0.16</b></td><td>45.1</td><td><b>0.13</b></td><td><b>46.0</b></td><td>0.14</td></tr>
+      <tr><td>300</td><td>38.2</td><td>0.25</td><td><b>41.2</b></td><td><b>0.18</b></td><td>35.9</td><td>0.21</td><td><b>38.3</b></td><td><b>0.20</b></td><td>36.5</td><td><b>0.18</b></td><td><b>38.3</b></td><td>0.19</td></tr>
+      <tr><td>500</td><td>32.5</td><td>0.28</td><td><b>35.5</b></td><td><b>0.20</b></td><td>31.9</td><td>0.22</td><td><b>35.2</b></td><td><b>0.18</b></td><td>33.2</td><td>0.22</td><td><b>35.9</b></td><td><b>0.20</b></td></tr>
+      </tbody></table>
+    </div>
+    <p class="table-note">
+      Evaluation follows the protocol of MapAnything. Bold marks the best displayed value within each backbone pair,
+      including ties. Parentheses show speedups over the corresponding backbone.
+    </p>
+  </section>
+
+  <section>
+    <h2>Learned Halting Patterns</h2>
+    <figure>
+      <img src="static/images/figS5_halting.webp" width="2400" height="989" loading="lazy"
+           alt="Post-DINO halting decisions in four scenes: input RGB, exact halt mask, and halt density overlay; halted fractions 21.8%, 23.6%, 27.9% and 32.0%.">
+      <figcaption>
+        GeoHalt's post-DINO halting decisions in four independent scenes. Top: RGB and exact halt masks. Bottom: halt
+        density in 4&times;4 patch bins. Blue denotes halted patches. Halting concentrates on broad wall and tabletop regions.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Qualitative Comparisons</h2>
+    <figure>
+      <img src="static/images/figS3_depth.webp" width="1988" height="1292" loading="lazy"
+           alt="Depth predictions from VGGT, SparseVGGT, FastVGGT and their GeoHalt variants, with enlarged lamp regions.">
+      <figcaption>Depth predictions with matched enlargements of the red-circled lamps.</figcaption>
+    </figure>
+    <figure>
+      <img src="static/images/figS4_err.webp" width="1988" height="840" loading="lazy"
+           alt="Absolute relative depth error maps for three views from each method.">
+      <figcaption>Absolute relative depth error for three shared views, |&#x1E91; &minus; z| / z.</figcaption>
+    </figure>
+    <figure class="narrow">
+      <img src="static/images/figS2_traj.webp" width="1584" height="1896" loading="lazy"
+           alt="Camera trajectories with and without GeoHalt on ScanNet++, colored by aligned 3D position error.">
+      <figcaption>Camera trajectories with and without GeoHalt on ScanNet++.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>BibTeX</h2>
+<pre class="bibtex"><code>@article{geohalt2026,
+  title   = {GeoHalt: Adaptive Token Halting for Efficient Visual Geometry Transformers},
+  author  = {Anonymous},
+  year    = {2026}
+}</code></pre>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>&copy; 2026 GeoHalt</p>
+</footer>
+
+</body>
+</html>
