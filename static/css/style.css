@@ -19,7 +19,7 @@ a { color: #2563d9; }
 .header {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 64px 16px 8px;
+  padding: 96px 16px 0;
   text-align: center;
 }
 .title {
@@ -31,20 +31,20 @@ a { color: #2563d9; }
 }
 .title .name { color: #2563d9; }
 .authors {
-  margin: 22px 0 0;
+  margin: 36px 0 0;
   font-size: 1.15rem;
   color: #222222;
 }
 .author { display: inline-block; margin: 0 10px; white-space: nowrap; }
 .authors sup, .affiliations sup, .author-note sup { font-size: 0.65em; }
 .affiliations {
-  margin: 6px 0 0;
+  margin: 12px 0 0;
   font-size: 1.05rem;
   color: #444444;
 }
 .affiliations span { display: inline-block; margin: 0 12px; white-space: nowrap; }
 .author-note {
-  margin: 8px 0 0;
+  margin: 14px 0 0;
   font-size: 0.85rem;
   color: #777777;
 }
@@ -52,8 +52,8 @@ a { color: #2563d9; }
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 10px;
-  margin-top: 22px;
+  gap: 12px;
+  margin-top: 36px;
 }
 .button {
   display: inline-block;
@@ -76,8 +76,8 @@ main {
   margin: 0 auto;
   padding: 0 16px;
 }
-section { margin-top: 56px; }
-section.teaser { margin-top: 36px; }
+section { margin-top: 80px; }
+section.teaser { margin-top: 72px; }
 
 h2 {
   margin: 0 0 18px;
@@ -182,10 +182,12 @@ figure.narrow figcaption { text-align: center; }
 /* ---------- Small screens ---------- */
 @media (max-width: 720px) {
   body { font-size: 16px; }
-  .header { padding-top: 40px; }
+  .header { padding-top: 56px; }
   .title { font-size: 1.7rem; }
   .br-wide { display: none; }
   h2 { font-size: 1.45rem; }
-  section { margin-top: 44px; }
+  section { margin-top: 60px; }
+  section.teaser { margin-top: 52px; }
+  .authors, .buttons { margin-top: 28px; }
   .text, .caption, figcaption { text-align: left; }
 }
