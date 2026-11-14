@@ -31,9 +31,22 @@ a { color: #2563d9; }
 }
 .title .name { color: #2563d9; }
 .authors {
-  margin: 20px 0 0;
+  margin: 22px 0 0;
   font-size: 1.15rem;
+  color: #222222;
+}
+.author { display: inline-block; margin: 0 10px; white-space: nowrap; }
+.authors sup, .affiliations sup, .author-note sup { font-size: 0.65em; }
+.affiliations {
+  margin: 6px 0 0;
+  font-size: 1.05rem;
   color: #444444;
+}
+.affiliations span { display: inline-block; margin: 0 12px; white-space: nowrap; }
+.author-note {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: #777777;
 }
 .buttons {
   display: flex;
@@ -52,7 +65,10 @@ a { color: #2563d9; }
   font-weight: 600;
   text-decoration: none;
 }
-.button:hover { background: #1f1f1f; }
+.button i { margin-right: 7px; font-size: 1.05em; }
+.button span { vertical-align: middle; }
+a.button:hover { background: #1f1f1f; }
+.button.soon { cursor: default; }
 
 /* ---------- Content ---------- */
 main {
