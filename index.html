@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.4/css/academicons.min.css">
   <!-- Bump ?v= whenever style.css changes so browsers don't keep an old cached copy. -->
-  <link rel="stylesheet" href="static/css/style.css?v=2">
+  <link rel="stylesheet" href="static/css/style.css?v=3">
 </head>
 <body>
 
@@ -58,6 +58,22 @@
 <main>
 
   <section class="teaser">
+    <video class="teaser-video" autoplay muted loop playsinline preload="auto"
+           poster="static/videos/geohalt_teaser_poster.jpg" width="1280" height="600"
+           aria-label="GeoHalt halting decisions on input views, a compute map (red: still computing, blue: halted early) painted frame by frame onto a growing 64-view reconstruction, and a real-time comparison of VGGT and VGGT + GeoHalt.">
+      <source src="static/videos/geohalt_teaser.mp4" type="video/mp4">
+    </video>
+    <p class="caption teaser-video-caption">
+      GeoHalt learns, for every image patch, when it can stop updating. On these 64 views, 26% of the patches halt
+      right after DINOv2 and most others after block 17; only 5% pass through all 24 blocks, leaving 57% of the
+      patch-block updates. The compute map (normalised over all 64 views) shows how many of the 24 blocks each region
+      goes through: textured objects and edges stay red (still computing), while the floor, rug, walls and TV screen
+      are blue (halted early). As the camera walks
+      through the views, each frame paints its compute map onto the reconstruction. On the same GPU, VGGT and
+      VGGT + GeoHalt reconstruct the 64 views in
+      6.6&nbsp;s and 4.3&nbsp;s (1.55&times;); the reconstructions are revealed at a pace set by these measured
+      latencies. Scene: Mip-NeRF&nbsp;360 <em>room</em>.
+    </p>
     <img src="static/images/fig1_teaser.webp" width="2400" height="837"
          alt="500-view ScanNet reconstruction from ground truth, VGGT, SparseVGGT, SparseVGGT + GeoHalt, FastVGGT and FastVGGT + GeoHalt, with point clouds on top and distance to ground truth below.">
     <p class="caption">

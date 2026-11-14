@@ -80,6 +80,14 @@ main {
 }
 section { margin-top: 80px; }
 section.teaser { margin-top: 72px; }
+.teaser-video {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+  background: #ffffff;
+}
+.teaser-video-caption { margin-bottom: 44px; }
 
 h2 {
   margin: 0 0 18px;
