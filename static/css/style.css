@@ -58,7 +58,9 @@ a { color: #2563d9; }
   margin-top: 36px;
 }
 .button {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   padding: 8px 22px;
   border-radius: 999px;
   background: #363636;
@@ -67,8 +69,7 @@ a { color: #2563d9; }
   font-weight: 400;
   text-decoration: none;
 }
-.button i { margin-right: 7px; font-size: 1.05em; }
-.button span { vertical-align: middle; }
+.button i { font-size: 1.05em; line-height: 1; }
 a.button:hover { background: #1f1f1f; }
 .button.soon { cursor: default; }
 
