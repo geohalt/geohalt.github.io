@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.4/css/academicons.min.css">
   <!-- Bump ?v= whenever style.css changes so browsers don't keep an old cached copy. -->
-  <link rel="stylesheet" href="static/css/style.css?v=5">
+  <link rel="stylesheet" href="static/css/style.css?v=6">
 </head>
 <body>
 
@@ -76,13 +76,6 @@
       latencies. Scene: Mip-NeRF&nbsp;360 <em>room</em>.
       </figcaption>
     </figure>
-    <img src="static/images/fig1_teaser.webp" width="2400" height="837"
-         alt="500-view ScanNet reconstruction from ground truth, VGGT, SparseVGGT, SparseVGGT + GeoHalt, FastVGGT and FastVGGT + GeoHalt, with point clouds on top and distance to ground truth below.">
-    <p class="caption">
-      GeoHalt accelerates visual geometry transformers without compromising multi-view reconstruction quality.
-      On this 500-view ScanNet scene, GeoHalt reduces surface deviations from ground truth and achieves 2.45&times; and
-      1.84&times; inference speedups over SparseVGGT and FastVGGT, respectively. Bottom-row colors indicate distance to ground truth.
-    </p>
   </section>
 
   <section>
@@ -156,6 +149,15 @@
       44.91%, and improves pose AUC@30 in 17 of 18 comparisons. At 500 views, it achieves up to 2.16&times; and
       2.04&times; inference speedups over SparseVGGT and FastVGGT, respectively.
     </p>
+    <figure>
+      <img src="static/images/fig1_teaser.webp" width="2400" height="837" loading="lazy"
+           alt="500-view ScanNet reconstruction from ground truth, VGGT, SparseVGGT, SparseVGGT + GeoHalt, FastVGGT and FastVGGT + GeoHalt, with point clouds on top and distance to ground truth below.">
+      <figcaption>
+        GeoHalt accelerates visual geometry transformers without compromising multi-view reconstruction quality.
+        On this 500-view ScanNet scene, GeoHalt reduces surface deviations from ground truth and achieves 2.45&times; and
+        1.84&times; inference speedups over SparseVGGT and FastVGGT, respectively. Bottom-row colors indicate distance to ground truth.
+      </figcaption>
+    </figure>
 
     <p class="table-title">Point-cloud reconstruction (points reconstructed from predicted depth and pose)</p>
     <div class="table-wrap">

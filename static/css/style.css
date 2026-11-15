@@ -88,7 +88,7 @@ section.teaser { margin-top: 72px; }
   margin: 0 auto;
   background: #ffffff;
 }
-.teaser-video-figure { margin: 0 0 56px; }
+.teaser-video-figure { margin: 0; }
 
 h2 {
   margin: 0 0 18px;
@@ -199,7 +199,6 @@ figure.narrow figcaption { text-align: center; }
   h2 { font-size: 1.45rem; }
   section { margin-top: 60px; }
   section.teaser { margin-top: 52px; }
-  .teaser-video-figure { margin-bottom: 40px; }
   .authors, .buttons { margin-top: 28px; }
   .text, .caption, figcaption { text-align: left; }
 }
